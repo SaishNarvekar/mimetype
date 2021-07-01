@@ -251,6 +251,62 @@ func NdJson(raw []byte, limit uint32) bool {
 	return parsed > 2 && parsed == len(raw)
 }
 
+// TopoJson matches https://github.com/topojson/topojson-specification/blob/master/README.md
+// specification.
+// TopoJson detection implies searching for key:value pairs like: `"type": "Topology"`
+// in the input.
+func TopoJson(raw []byte, limit uint32) bool {
+	raw = trimLWS(raw)
+	if len(raw) == 0 {
+		return false
+	}
+	// TopoJson is always a JSON object, not a JSON array.
+	if raw[0] != '{' {
+		return false
+	}
+
+	s := []byte(`"type"`)
+	si, sl := bytes.Index(raw, s), len(s)
+
+	if si == -1 {
+		return false
+	}
+
+	// If the "type" string is the suffix of the input,
+	// there is no need to search for the value of the key.
+	if si+sl == len(raw) {
+		return false
+	}
+	// Skip the "type" part.
+	raw = raw[si+sl:]
+	// Skip any whitespace before the colon.
+	raw = trimLWS(raw)
+	// Check for colon.
+	if len(raw) == 0 || raw[0] != ':' {
+		return false
+	}
+	// Skip any whitespace after the colon.
+	raw = trimLWS(raw[1:])
+
+	topoJsonTypes := [][]byte{
+		[]byte(`"Topology"`),
+		[]byte(`"Point"`),
+		[]byte(`"LineString"`),
+		[]byte(`"Polygon"`),
+		[]byte(`"MultiPoint"`),
+		[]byte(`"MultiLineString"`),
+		[]byte(`"MultiPolygon"`),
+		[]byte(`"GeometryCollection"`),
+	}
+	for _, t := range topoJsonTypes {
+		if bytes.HasPrefix(raw, t) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Svg matches a SVG file.
 func Svg(raw []byte, limit uint32) bool {
 	return bytes.Contains(raw, []byte("<svg"))

@@ -63,6 +63,7 @@ var files = map[string]string{
 	"gbr.gbr":            "image/x-gimp-gbr",
 	"geojson.1.geojson":  "application/geo+json",
 	"geojson.geojson":    "application/geo+json",
+	"topojson.topojson":  "application/json",
 	"gif.gif":            "image/gif",
 	"glb.glb":            "model/gltf-binary",
 	"gml.gml":            "application/gml+xml",
